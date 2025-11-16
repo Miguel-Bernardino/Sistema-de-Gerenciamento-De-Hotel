@@ -1,0 +1,129 @@
+.sidebar{
+    
+    color: var(--sidebar-item-default-hover-focus);
+    background-color: var(--sidebar-bg);    
+
+    display: flex;
+    justify-content: center;
+    width: 100%;
+
+}
+
+.sidebarItem{
+
+    width: 45px;
+    height: 45px;
+
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.sidebarItemFinanceIcon{
+    width: 45px;
+    height: 45px;
+    flex-shrink: 0;
+}
+
+.sidebar-li{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; 
+    width: 100%;
+    /* Use label margin for spacing instead of gap to avoid shrinking SVG */
+    fill: var(--sidebar-item-default);
+    color: var(--sidebar-item-default);
+
+    max-height: 50px;
+    box-sizing: border-box;
+}
+
+/* Ensure anchors fill the row for consistent hit area and alignment */
+.sidebar-li a{
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-li:hover, .sidebar-li:focus{
+    background-color: var(--sidebar-bg-hover);
+    fill: var(--sidebar-item-hover-focus);
+    color: var(--sidebar-item-hover-focus);
+}
+
+.sidebarItem:hover, .sidebarItemFinanceIcon:focus{
+    color: var(--sidebar-item-hover-focus);
+}
+
+.sidebarItemFinanceIcon:hover, .sidebarItem:focus{
+    fill: var(--sidebar-item-hover-focus);
+    stroke: var(--sidebar-item-hover-focus);
+}
+
+/* Active (current route) uses same styling as hover */
+.sidebar-li-active {
+    background-color: var(--sidebar-bg-hover);
+    color: var(--sidebar-item-hover-focus);
+    fill: var(--sidebar-item-hover-focus);
+    stroke: var(--sidebar-item-hover-focus);
+}
+
+.sidebar-li-active svg {
+    color: var(--sidebar-item-hover-focus);
+    fill: var(--sidebar-item-hover-focus);
+    stroke: var(--sidebar-item-hover-focus);
+}
+
+.sidebarRootExpanded {
+    /* marker class for expanded sidebar */
+    /* Add a no-op property to satisfy linter */
+    outline: none;
+}
+
+/* When collapsed: active item loses right radius and padding so highlight sits flush */
+.sidebarRootCollapsed .sidebar-li-active {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-right: 0;
+}
+
+/* Labels for expanded sidebar */
+.labelHidden{
+    opacity: 0;
+    max-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 200ms ease, max-width 200ms ease, margin-left 200ms ease;
+}
+
+.labelVisible{
+    opacity: 1;
+    max-width: 160px;
+    margin-left: 8px;
+    transition: opacity 200ms ease, max-width 200ms ease, margin-left 200ms ease;
+}
+
+.activeIndicatorInline{
+    flex-shrink: 0;
+    margin-right: 4px;
+    display: block;
+    position: static;
+    height: 50px;
+}
+
+.activeIndicatorOverlay{
+    position: absolute;
+    /*
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    */
+    pointer-events: none;
+    width: 12px;
+    height: 50px;
+    display: block;
+    flex-shrink: 0;
+}

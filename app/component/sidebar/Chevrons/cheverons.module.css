@@ -1,0 +1,16 @@
+.svg {
+  cursor: default;
+  overflow: visible;
+}
+
+/* Animação padrão */
+.chevrons {
+  transition: transform 260ms cubic-bezier(.2,.9,.2,1);
+  transform-origin: center;
+  transform-box: view-box;
+}
+
+/* Quando a div pai estiver em hover → inverte direção */
+.chevrons.flipped {
+  transform: scaleX(-1);
+}
