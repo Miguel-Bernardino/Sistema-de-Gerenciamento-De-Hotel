@@ -16,7 +16,7 @@ export const SidebarMobile: React.FC<any> = ({ isActive, focusPage, setFocusPage
                 <div onClick={() => setIsModalOpen(true)} 
                 className={` ${style.menuButton} flex justify-center items-center p-1.5 rounded-lg transition-colors duration-200`}>                
                     <button>
-                        <Menu className={style.menuSvg} />
+                        <Menu className={`cursor-pointer ${style.menuSvg}`} />
                     </button>
                 </div>
             </header>
