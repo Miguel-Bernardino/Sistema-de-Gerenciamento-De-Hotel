@@ -1,8 +1,9 @@
-import { useEffect, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useState, type ReactNode, type CSSProperties } from 'react';
 import styles from './Modal.module.css';
 
 type ModalPosition = 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 type AnimationType = 'slideIn' | 'fadeIn' | 'scaleIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'none';
+type ExitAnimationType = 'slideOut' | 'fadeOut' | 'scaleOut' | 'slideOutUp' | 'slideOutDown' | 'slideOutLeft' | 'slideOutRight' | 'none';
 
 interface ModalProps {
   isOpen: boolean;
@@ -31,9 +32,13 @@ interface ModalProps {
   showHeader?: boolean;
   customCloseIcon?: ReactNode;
   animationType?: AnimationType;
+  exitAnimationType?: ExitAnimationType;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, position = 'center', padding, margin, className, overlayClassName, backgroundColor, scrollbarThumbColor, scrollbarTrackColor, borderRadius, borderWidth, borderColor, borderStyle = 'solid', maxWidth, minWidth, maxHeight, minHeight, titleColor, closeButtonColor, closeButtonHoverColor, showHeader = true, customCloseIcon, animationType = 'slideIn' }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, position = 'center', padding, margin, className, overlayClassName, backgroundColor, scrollbarThumbColor, scrollbarTrackColor, borderRadius, borderWidth, borderColor, borderStyle = 'solid', maxWidth, minWidth, maxHeight, minHeight, titleColor, closeButtonColor, closeButtonHoverColor, showHeader = true, customCloseIcon, animationType = 'slideIn', exitAnimationType = 'fadeOut' }) => {
+  
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
   
   const getStyleValue = (value?: string | { top?: string; right?: string; bottom?: string; left?: string }) => {
     if (!value) return undefined;
@@ -71,15 +76,25 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, positio
   
   useEffect(() => {
     if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+    } else if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+        document.body.style.overflow = 'unset';
+      }, 300); // Match animation duration
+      return () => clearTimeout(timer);
     }
-    
+  }, [isOpen, shouldRender]);
+  
+  useEffect(() => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -97,11 +112,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, positio
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
+
+  const currentAnimation = isClosing ? exitAnimationType : animationType;
 
   return (
-    <div className={`${styles.overlay} ${styles[`position-${position}`]} ${overlayClassName || ''}`} onClick={onClose}>
-      <div className={`${styles.modal} ${styles[`animation-${animationType}`]} ${className || ''}`} style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ''} ${styles[`position-${position}`]} ${overlayClassName || ''}`} onClick={onClose}>
+      <div className={`${styles.modal} ${styles[`animation-${currentAnimation}`]} ${className || ''}`} style={modalStyle} onClick={(e) => e.stopPropagation()}>
         {showHeader && (
           <div className={styles.header}>
             {title && <h2 className={styles.title}>{title}</h2>}

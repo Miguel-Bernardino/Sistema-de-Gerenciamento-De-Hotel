@@ -74,9 +74,59 @@
     border-radius: 1.5vw;
     box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
     position: relative;
     width: 100%;
     height: auto;
+    display: flex;
+    flex-direction: column;
+    /* constrain modal to viewport so inner scrolling works reliably */
+    max-height: calc(100vh - 4vh);
+}
+
+/* Content wrapper inside modal grows to fill and allows inner layouts */
+.content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* allow flex child to shrink for proper scrolling */
+}
+
+.content > ol,
+.content > ul,
+.modal > ol,
+.modal > ul {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    padding: 0;
+    margin: 0;
+    row-gap: 8px; /* spacing between header/main/footer when space allows */
+}
+
+.modal li {
+    height: 56px;
+    min-height: 56px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto; /* prevent grow/shrink */
+    padding: 0;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .modal li {
+        height: 70px;
+        min-height: 70px;
+    }
+}
+
+/* Push footer to the bottom of the navigation column when space is available */
+.content > footer,
+.modal > footer,
+.content > ol > footer,
+.modal > ol > footer {
+    margin-top: auto;
 }
 
 /* Animation variants */
@@ -112,6 +162,40 @@
     animation: none;
 }
 
+/* Exit animations */
+.animation-slideOut {
+    animation: slideOut 0.3s ease-in;
+}
+
+.animation-fadeOut {
+    animation: fadeOutModal 0.3s ease-out;
+}
+
+.animation-scaleOut {
+    animation: scaleOut 0.3s ease-in;
+}
+
+.animation-slideOutUp {
+    animation: slideOutUp 0.3s ease-in;
+}
+
+.animation-slideOutDown {
+    animation: slideOutDown 0.3s ease-in;
+}
+
+.animation-slideOutLeft {
+    animation: slideOutLeft 0.3s ease-in;
+}
+
+.animation-slideOutRight {
+    animation: slideOutRight 0.3s ease-in;
+}
+
+.overlayClosing {
+    animation: fadeOut 0.3s ease-out;
+}
+
+/* Entry animations */
 @keyframes slideIn {
     from {
         transform: translateY(-50px);
@@ -187,6 +271,91 @@
     }
 }
 
+/* Exit animations keyframes */
+@keyframes slideOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOutModal {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes scaleOut {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutUp {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-100px);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+}
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -226,6 +395,12 @@
 
 .modal::-webkit-scrollbar {
     width: 0.5vw;
+}
+
+/* Firefox scrollbar colors */
+.modal {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-color, var(--sidebar-scrollbar-thumb)) var(--scrollbar-track-color, var(--sidebar-scrollbar-track));
 }
 
 .modal::-webkit-scrollbar-track {
