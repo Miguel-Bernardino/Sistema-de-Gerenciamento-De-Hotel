@@ -1,0 +1,172 @@
+.modal{
+    width: 70%;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .modal{
+        width: 50%;
+    }
+}
+
+.menuButton {
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+       
+    box-shadow: 0 0 11px 0 var(--box-shadow-color);
+
+    margin:  0 10px 10px 0;
+
+    color: var(--sidebar-menu);
+
+    border: none;
+    cursor: pointer;
+}
+
+.menuButton:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .menuButton{
+        width: 60px;
+        height: 60px;
+    }
+}
+
+.modalItem {
+    
+    width: 100%;
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    
+    color: var(--sidebar-item-default);
+    fill: var(--sidebar-item-default);
+
+    font-family: "Inter";
+    font-weight: 600;
+    font-size: 20px;
+
+    border: none;
+    cursor: pointer;
+}
+
+
+.modalItem:hover {
+    color: var(--sidebar-item-hover-focus);
+    fill: var(--sidebar-item-hover-focus);
+    background-color: var(--sidebar-bg-hover);
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .modalItem{
+        height: 55px;
+    }
+}
+
+
+ol header {
+    margin-top: clamp(0px, 20px, 40px);
+    margin-bottom: 20px;
+}
+
+.menuSvg{
+    width: 9vw;
+    height: 9vh;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .menuSvg{
+        width: 6vw;
+        height: 6vh;
+    }
+}
+
+.modalItemMenuIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+
+
+    gap: 20px;
+
+    padding-left: 10px;
+
+    border: none;
+    
+    cursor: pointer;
+
+    color: inherit;
+}
+
+.modalItemIcon {
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+
+    width: 10vw;
+    height: 10vh;
+
+
+    gap: 20px;
+
+    padding-left: 10px;
+    margin-right: 20px;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+
+    .modalItemIcon{
+        width: 6vw;
+        height: 6vh;
+        
+    }
+}
+
+.modalItemIcon:hover {
+    color: var(--sidebar-item-hover-focus);
+}
+
+.modalItemPriceIcon {
+    
+    width: 14vw;
+    height: 14vh;
+    flex-shrink: 0;
+    
+    padding-left: 10px;
+
+
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .modalItemPriceIcon{
+        width: 10vw;
+        height: 10vh;
+
+        margin-right: -17px;
+    }
+}
+
+/* Active (current route) uses same styling as hover */
+.sidebar-li-active {
+    background-color: var(--sidebar-bg-hover);
+    color: var(--sidebar-item-hover-focus);
+    stroke: var(--sidebar-item-hover-focus);
+}
+
+.sidebar-li-active svg {
+    color: var(--sidebar-item-hover-focus);
+    stroke: var(--sidebar-item-hover-focus);
+}
+

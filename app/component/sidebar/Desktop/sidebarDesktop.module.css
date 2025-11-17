@@ -49,15 +49,15 @@
 
 .sidebar-li:hover, .sidebar-li:focus{
     background-color: var(--sidebar-bg-hover);
-    fill: var(--sidebar-item-hover-focus);
     color: var(--sidebar-item-hover-focus);
+    fill: var(--sidebar-item-hover-focus);
 }
 
 .sidebarItem:hover, .sidebarItemFinanceIcon:focus{
     color: var(--sidebar-item-hover-focus);
 }
 
-.sidebarItemFinanceIcon:hover, .sidebarItem:focus{
+.sidebarItemFinanceIcon:hover, .sidebarItemFinanceIcon:focus{
     fill: var(--sidebar-item-hover-focus);
     stroke: var(--sidebar-item-hover-focus);
 }
@@ -66,13 +66,11 @@
 .sidebar-li-active {
     background-color: var(--sidebar-bg-hover);
     color: var(--sidebar-item-hover-focus);
-    fill: var(--sidebar-item-hover-focus);
     stroke: var(--sidebar-item-hover-focus);
 }
 
 .sidebar-li-active svg {
     color: var(--sidebar-item-hover-focus);
-    fill: var(--sidebar-item-hover-focus);
     stroke: var(--sidebar-item-hover-focus);
 }
 
@@ -104,26 +102,9 @@
     max-width: 160px;
     margin-left: 8px;
     transition: opacity 200ms ease, max-width 200ms ease, margin-left 200ms ease;
+    
+    font-family: "Inter";
+    font-weight: 600;
+
 }
 
-.activeIndicatorInline{
-    flex-shrink: 0;
-    margin-right: 4px;
-    display: block;
-    position: static;
-    height: 50px;
-}
-
-.activeIndicatorOverlay{
-    position: absolute;
-    /*
-    left: -2px;
-    top: 50%;
-    transform: translateY(-50%);
-    */
-    pointer-events: none;
-    width: 12px;
-    height: 50px;
-    display: block;
-    flex-shrink: 0;
-}

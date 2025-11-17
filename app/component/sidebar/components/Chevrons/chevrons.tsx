@@ -8,7 +8,7 @@ interface ChevronsProps {
 export const Chevrons: React.FC<ChevronsProps> = ({ isHovered = false }) => {
   return (
     <svg
-      width="25"
+      width="23"
       height="16"
       viewBox="0 0 25 16"
       xmlns="http://www.w3.org/2000/svg"

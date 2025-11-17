@@ -7,10 +7,15 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --cor-principal: #F2F2F2; 
   
+  --box-shadow-color: #090d1f80;
+
   --sidebar-bg: #151A2D;
+  --sidebar-menu: #151A2D;
   --sidebar-bg-hover: #00c3b01a;
   --sidebar-item-default: #F2F2F2;
   --sidebar-item-hover-focus: #00C3B0;
+  --sidebar-scrollbar-track: #00c3b01a;
+  --sidebar-scrollbar-thumb: #00c3b0;
 
   --ocupacao-disponivel: #10b981d9;
   --ocupacao-ocupado: #be123cd9;
@@ -23,6 +28,14 @@
   --ocupacao-checkin: #06b6d4d9;
 
 
+}
+
+
+.font-inter {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
 
 html,

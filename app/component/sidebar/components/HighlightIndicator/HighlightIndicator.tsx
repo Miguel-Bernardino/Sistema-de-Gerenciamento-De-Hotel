@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import style from './sidebar.module.css';
+import style from './HighlightIndicator.module.css';
 
 interface HighlightIndicatorProps {
   inline?: boolean; // true when sidebar expanded; false overlay in collapsed state
