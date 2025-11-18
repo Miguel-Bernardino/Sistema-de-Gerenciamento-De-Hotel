@@ -7,7 +7,7 @@ export default function Layout() {
         <nav>
             <Sidebar />
         </nav>
-        <main>
+        <main className="flex w-full h-full">
             <Outlet />
         </main>
     </div>

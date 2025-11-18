@@ -22,7 +22,9 @@ a {
     align-items: center;
     justify-content: center;
        
-    box-shadow: 0 0 11px 0 var(--box-shadow-color);
+    box-shadow: var(--box-shadow);
+
+    background-color: var(--sidebar-item-default);
 
     margin:  0 10px 10px 0;
 

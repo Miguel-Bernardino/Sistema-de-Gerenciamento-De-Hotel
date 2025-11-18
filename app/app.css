@@ -5,9 +5,11 @@
 :root {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --cor-principal: #F2F2F2; 
-  
+  --cor-principal: #EFEFEF; 
+  --top-header-margin: 30px;
+
   --box-shadow-color: #090d1f80;
+  --box-shadow: 0 0 11px 0 var(--box-shadow-color);
 
   --sidebar-bg: #151A2D;
   --sidebar-menu: #151A2D;
@@ -16,6 +18,9 @@
   --sidebar-item-hover-focus: #00C3B0;
   --sidebar-scrollbar-track: #00c3b01a;
   --sidebar-scrollbar-thumb: #00c3b0;
+
+  --topbar-bg-color: #F2F2F2;
+  --topbar-button-hover-bg: #c7c6c65e;
 
   --ocupacao-disponivel: #10b981d9;
   --ocupacao-ocupado: #be123cd9;
