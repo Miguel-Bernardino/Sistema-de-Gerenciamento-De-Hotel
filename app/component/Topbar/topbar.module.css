@@ -44,7 +44,7 @@ svg {
 
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .topbarContainer {
         height: 40px;
         margin: var(--top-header-margin) 5px 15px 5px;
