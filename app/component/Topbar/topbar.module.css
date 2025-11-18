@@ -11,13 +11,23 @@
     justify-content: center;
     align-items: center;
     
-    margin: var(--top-header-margin) 10px 20px 10px;
+    margin-top: var(--top-header-margin);
+    
+    /*
+    margin: var(--top-header-margin) 10px 10px 10px;
+    */
 
     box-shadow: var(--box-shadow);
 
     border-radius: 30px;
 
     padding: 5px;      
+}
+
+@media (min-width: 1024px){
+    .topbarContainer {
+        margin: var(--top-header-margin) 20px 0px 20px;
+    }
 }
 
 .topbarButton {
@@ -45,9 +55,13 @@ svg {
 }
 
 @media (max-width: 1023px) {
+
     .topbarContainer {
         height: 40px;
+        margin-top: var(--top-header-margin);
+        /*
         margin: var(--top-header-margin) 5px 15px 5px;
+        */
     }
 
     .topbarButton {
@@ -65,7 +79,10 @@ svg {
 @media (orientation: landscape) and (max-height: 480px) {
     .topbarContainer {
         height: 40px;
-        margin: var(--top-header-margin) 5px 15px 5px;
+        margin-top: var(--top-header-margin);
+        /*
+            margin: var(--top-header-margin) 5px 15px 5px;
+        */
     }
 
     .topbarButton {

@@ -1,15 +1,18 @@
 import Sidebar from '../component/sidebar/sidebar';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom'
+import styles from '../styles/layout.module.css';
 
 export default function Layout() {
   return (
-    <div className="flex">
-        <nav>
+    <div className={styles.maindiv}>
+        <nav className={styles.navbar}>
             <Sidebar />
         </nav>
-        <main className="flex w-full h-full">
-            <Outlet />
-        </main>
+        <Outlet />
     </div>
   );
 }
+/*
+        <main className="flex w-full h-full">
+        </main>
+*/

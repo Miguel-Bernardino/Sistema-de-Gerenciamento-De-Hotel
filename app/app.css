@@ -6,7 +6,7 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --cor-principal: #EFEFEF; 
-  --top-header-margin: 30px;
+  --top-header-margin: 33px;
 
   --box-shadow-color: #090d1f80;
   --box-shadow: 0 0 11px 0 var(--box-shadow-color);
@@ -22,9 +22,11 @@
   --topbar-bg-color: #F2F2F2;
   --topbar-button-hover-bg: #c7c6c65e;
 
-  --ocupacao-disponivel: #10b981d9;
-  --ocupacao-ocupado: #be123cd9;
-  --ocupacao-limpeza: #1e40aff2;
+  --text-on-primary: #F2F2F2;
+
+  --ocupacao-disponivel: #0D9488;
+  --ocupacao-ocupado: #BE123CD9;
+  --ocupacao-limpeza: #1E40AFF2;
   --ocupacao-vencido: #701A75;
   --ocupacao-manutencao: #1F2937;
   /* podem ou nao aparecer */

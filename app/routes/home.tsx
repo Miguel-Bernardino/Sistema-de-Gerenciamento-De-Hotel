@@ -1,11 +1,20 @@
 import { Topbar } from "../component/Topbar/topbar";
+import { RoomStatusbar } from "../component/roomStatusbar/roomStatusbar";
+import styles from '../styles/routes/home.module.css';
 
 export default function Home() {
   return (
-    <div className="w-full flex flex-col justify-center items-center">
-      <header className="w-full flex justify-center items-center">
+    <>
+      <header className={`flex justify-center items-center ${styles.topbar}`}>
         <Topbar />
       </header>
-    </div>
+      <main className={` ${styles.content}`}>
+        <RoomStatusbar />
+      </main>
+    </>
   );
 }
+/*
+    <div className="w-full flex flex-col justify-center items-center">
+    </div>
+*/

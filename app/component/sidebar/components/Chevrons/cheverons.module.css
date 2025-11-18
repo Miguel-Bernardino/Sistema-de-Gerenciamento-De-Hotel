@@ -1,6 +1,7 @@
 .svg {
   cursor: default;
   overflow: visible;
+  width: 22px;
 }
 
 /* Animação padrão */

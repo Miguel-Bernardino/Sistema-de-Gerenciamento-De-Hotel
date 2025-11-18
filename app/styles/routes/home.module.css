@@ -1,0 +1,13 @@
+.topbar {
+    
+    grid-area: topbar;  
+
+}
+
+.content {
+
+    width: fit-content(100%);
+
+    grid-area: main;
+
+}

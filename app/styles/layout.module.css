@@ -1,0 +1,48 @@
+.maindiv {
+
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: fit-content(100%) auto;
+    grid-template-rows: 95px auto;
+
+    grid-template-areas: 
+        "nav topbar"
+        "nav main"
+    ;
+}
+
+.navbar {
+
+    grid-area: nav;
+    
+    justify-content: center;
+
+}
+
+@media (max-width: 1023px) {
+
+    .maindiv {   
+        
+        justify-content: space-evenly;
+        
+        grid-template-columns: fit-content(100%) 85%;
+        grid-template-rows: auto auto;
+
+        grid-template-areas: 
+            "nav topbar"
+            "main main"
+        ;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .maindiv {   
+        
+        grid-template-columns: 10% 75%;
+
+    }
+}
