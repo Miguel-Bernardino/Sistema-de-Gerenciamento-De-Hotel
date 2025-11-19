@@ -117,12 +117,6 @@ Tailwind CSS já configurado. Você pode estender a configuração criando arqui
 - Documentação React Router: https://reactrouter.com/
 - Tailwind CSS: https://tailwindcss.com/
 
-## 🤝 Contribuição
-
-1. Crie uma branch: `git checkout -b feat/minha-feature`
-2. Faça commits pequenos e descritivos
-3. Abra um Pull Request
-
 ## ✅ Checklist Rápido
 - [ ] Node 20+ instalado
 - [ ] Dependências instaladas (`npm install`)
@@ -131,5 +125,3 @@ Tailwind CSS já configurado. Você pode estender a configuração criando arqui
 - [ ] Servindo em produção local (`npm run start` / Docker)
 
 ---
-
-Feito com ❤️ usando React Router.
