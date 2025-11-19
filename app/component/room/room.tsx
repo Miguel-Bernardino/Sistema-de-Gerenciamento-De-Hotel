@@ -29,19 +29,21 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
     };
 
     const handleCheckinComplete = (data: CheckinData) => {
-        // Atualiza o estado do quarto para OCCUPIED após check-in
+        // Se a data/hora de entrada é futura, tratar como RESERVA; caso contrário, OCUPADO
+        const statusToSet = data.isReservation ? enums.RoomStatusType.RESERVED : enums.RoomStatusType.OCCUPIED;
         setRoomData({
-            status: enums.RoomStatusType.OCCUPIED,
+            status: statusToSet,
             responsible: data.responsible,
             startDate: `${data.startDate} ${data.startTime}`,
             endDate: `${data.endDate} ${data.endTime}`
         });
 
-        console.log('Check-in concluído para quarto', id, {
+        console.log('Check-in/Reserva concluído para quarto', id, {
             ...data,
+            finalStatus: statusToSet,
             calculatedStayType: data.stayType === 'daily' ? 'Diária (12h)' : 'Pernoite (24h)'
         });
-        // TODO: Aqui você pode adicionar lógica adicional, como notificar componente pai
+        // TODO: lógica adicional (ex: notificar componente pai / persistir em backend)
     };
 
     return (

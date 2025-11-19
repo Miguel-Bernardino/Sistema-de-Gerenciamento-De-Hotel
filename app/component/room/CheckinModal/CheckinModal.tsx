@@ -16,6 +16,7 @@ interface CheckinModalProps {
 export interface CheckinData {
     roomId?: string | number;
     licensePlate?: string;
+    isReservation?: boolean;
     responsible: string;
     cpf: string;
     birthDate: string;
@@ -63,6 +64,7 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
         defaultValues: {
             roomId: roomId || '',
             licensePlate: '',
+            isReservation: false,
             responsible: '',
             cpf: '',
             birthDate: '',
@@ -198,13 +200,17 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
 
     const processCheckin = async (data: CheckinData) => {
         try {
+            const now = new Date();
+            const startDateTime = new Date(`${data.startDate}T${data.startTime}`);
+            const isReservation = startDateTime.getTime() > now.getTime();
+            const enriched: CheckinData = { ...data, isReservation };
             const response = await mockBackendCall({
                 roomId,
-                ...data
+                ...enriched
             });
 
             if (response.success) {
-                onCheckinComplete(data);
+                onCheckinComplete(enriched);
                 reset();
                 onClose();
             } else {
