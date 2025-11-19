@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import Modal from '~/component/Modal/Modal';
-import { UserRound, CalendarClock, BadgeInfo, Check, X, Calendar, Clock, CreditCard, Users, Plus, Trash2 } from 'lucide-react';
+import { UserRound, CalendarClock, BadgeInfo, Check, X, Calendar, Clock, CreditCard, Users, Plus, Trash2, Car, DoorOpen } from 'lucide-react';
 import styles from './CheckinModal.module.css';
 
 interface CheckinModalProps {
     isOpen: boolean;
     onClose: () => void;
-    roomId: string | number;
-    roomType: string;
+    roomId?: string | number;
+    roomType?: string;
+    availableRooms?: Array<{ id: string | number; type: string; number: string }>;
     onCheckinComplete: (data: CheckinData) => void;
 }
 
 export interface CheckinData {
+    roomId?: string | number;
+    licensePlate?: string;
     responsible: string;
     cpf: string;
     birthDate: string;
@@ -35,6 +38,7 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
     onClose, 
     roomId, 
     roomType,
+    availableRooms = [],
     onCheckinComplete 
 }) => {
     const getCurrentDateTime = () => {
@@ -57,6 +61,8 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
         formState: { errors, isSubmitting } 
     } = useForm<CheckinData>({
         defaultValues: {
+            roomId: roomId || '',
+            licensePlate: '',
             responsible: '',
             cpf: '',
             birthDate: '',
@@ -120,6 +126,11 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
                 .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
         }
         return value;
+    };
+
+    const formatLicensePlate = (value: string) => {
+        // Formato brasileiro: ABC-1234 ou ABC1D23
+        return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
     };
 
     const validateCPF = (cpf: string): boolean => {
@@ -246,7 +257,11 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
                         <Check className={styles.headerIcon} />
                         <div>
                             <h2 className={styles.title}>Check-in</h2>
-                            <p className={styles.subtitle}>Quarto {roomId} - {roomType}</p>
+                            {roomId && roomType ? (
+                                <p className={styles.subtitle}>Quarto {roomId} - {roomType}</p>
+                            ) : (
+                                <p className={styles.subtitle}>Selecione um quarto disponível</p>
+                            )}
                         </div>
                     </div>
                     <button 
@@ -260,6 +275,55 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
 
                 {/* Form */}
                 <form onSubmit={hookFormSubmit(onSubmit)} className={styles.form}>
+                    {/* Dropdown de Quartos (se houver lista de quartos disponíveis) */}
+                    {availableRooms.length > 0 && (
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="roomId" className={styles.label}>
+                                <DoorOpen size={20} className={styles.labelIcon} />
+                                Quarto
+                            </label>
+                            <select
+                                id="roomId"
+                                className={styles.input}
+                                disabled={isSubmitting}
+                                {...register('roomId', { 
+                                    required: 'Selecione um quarto' 
+                                })}
+                            >
+                                <option value="">Selecione um quarto disponível</option>
+                                {availableRooms.map((room) => (
+                                    <option key={room.id} value={room.id}>
+                                        Quarto {room.number} - {room.type}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.roomId && (
+                                <span className={styles.errorText}>{errors.roomId.message}</span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Placa do Veículo */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="licensePlate" className={styles.label}>
+                            <Car size={20} className={styles.labelIcon} />
+                            Placa do Veículo (opcional)
+                        </label>
+                        <input
+                            id="licensePlate"
+                            type="text"
+                            placeholder="ABC-1234 ou ABC1D23"
+                            maxLength={7}
+                            className={styles.input}
+                            disabled={isSubmitting}
+                            {...register('licensePlate', {
+                                onChange: (e) => {
+                                    e.target.value = formatLicensePlate(e.target.value);
+                                }
+                            })}
+                        />
+                    </div>
+
                     {/* Responsável */}
                     <div className={styles.inputGroup}>
                         <label htmlFor="responsible" className={styles.label}>
