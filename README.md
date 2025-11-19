@@ -1,87 +1,135 @@
-# Welcome to React Router!
+# Sistema de Gerenciamento de Hotel
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Aplicação web para gerenciamento de quartos, check-ins e status em um hotel, construída com React Router, Vite, TypeScript e Tailwind CSS. Este README descreve como preparar o ambiente, executar em desenvolvimento, gerar build de produção e utilizar Docker.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 📋 Pré-requisitos
 
-## Features
+- Node.js >= 20 (recomendado igual à imagem Docker `node:20-alpine`)
+- npm (instalado junto com Node)
+- Docker (opcional, para containerização)
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+Verifique versões:
+```bash
+node -v
+npm -v
+```
 
-## Getting Started
+## 📦 Clonando o Projeto
 
-### Installation
+```bash
+git clone https://github.com/Miguel-Bernardino/Sistema-de-Gerenciamento-De-Hotel.git
+cd Sistema-de-Gerenciamento-De-Hotel
+```
 
-Install the dependencies:
+## 🛠 Instalação das Dependências
 
 ```bash
 npm install
 ```
 
-### Development
+Se estiver usando CI ou quiser instalação reprodutível mais rápida em ambiente limpo:
+```bash
+npm ci
+```
 
-Start the development server with HMR:
+## 🚀 Ambiente de Desenvolvimento
 
+Inicie o servidor com HMR (Hot Module Replacement):
 ```bash
 npm run dev
 ```
+Acesse: `http://localhost:5173`
 
-Your application will be available at `http://localhost:5173`.
+### Scripts Disponíveis
 
-## Building for Production
+| Script | Função |
+| ------ | ------ |
+| `npm run dev` | Servidor de desenvolvimento com HMR |
+| `npm run build` | Gera build (SSR + assets) em `build/` |
+| `npm run start` | Serve build de produção (usa `react-router-serve`) |
+| `npm run typecheck` | Gera types e roda TypeScript para checagem |
 
-Create a production build:
+## 🧱 Estrutura de Pastas (resumo)
+```
+app/            # Código fonte principal (componentes, rotas, estilos)
+build/          # Saída gerada pelo build (client + server)
+Dockerfile      # Build multi-stage para produção
+public/         # Assets públicos (se houver)
+react-router.config.ts # Configurações do React Router
+```
 
+## 🏗 Build de Produção
+
+Gerar build:
 ```bash
 npm run build
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
+Executar o servidor sobre o build (porta padrão 3000):
 ```bash
-docker build -t my-app .
+npm run start
+```
+Acesse: `http://localhost:3000`
 
-# Run the container
-docker run -p 3000:3000 my-app
+## 🔍 Verificação de Tipos
+```bash
+npm run typecheck
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## 🐳 Uso com Docker
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
+Build da imagem multi-stage:
+```bash
+docker build -t hotel-app .
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+Executar o container expondo a porta 3000:
+```bash
+docker run --rm -p 3000:3000 hotel-app
+```
+Acesse: `http://localhost:3000`
+
+### Otimizações Possíveis
+- Usar `--platform=linux/amd64` em ambientes ARM se necessário
+- Publicar a imagem em um registry: `docker tag hotel-app <seu-registro>/hotel-app:latest && docker push <seu-registro>/hotel-app:latest`
+
+## 🌐 Deploy Manual (Sem Docker)
+
+Copie apenas os arquivos necessários:
+```
+package.json
+package-lock.json
+build/
+```
+Instale dependências de produção:
+```bash
+npm ci --omit=dev
+```
+Inicie:
+```bash
+npm run start
 ```
 
-## Styling
+## 🎨 Estilos
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+Tailwind CSS já configurado. Você pode estender a configuração criando arquivo `tailwind.config.js` (se ainda não existir) e adicionando suas regras. Também é possível substituir por outro framework se desejar.
+
+## 📚 Referências
+- Documentação React Router: https://reactrouter.com/
+- Tailwind CSS: https://tailwindcss.com/
+
+## 🤝 Contribuição
+
+1. Crie uma branch: `git checkout -b feat/minha-feature`
+2. Faça commits pequenos e descritivos
+3. Abra um Pull Request
+
+## ✅ Checklist Rápido
+- [ ] Node 20+ instalado
+- [ ] Dependências instaladas (`npm install`)
+- [ ] Rodou `npm run dev` e acessou porta 5173
+- [ ] Build gerado (`npm run build`) para produção
+- [ ] Servindo em produção local (`npm run start` / Docker)
 
 ---
 
-Built with ❤️ using React Router.
+Feito com ❤️ usando React Router.
