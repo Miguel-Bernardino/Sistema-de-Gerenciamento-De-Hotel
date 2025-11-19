@@ -28,7 +28,9 @@
         
         justify-content: space-evenly;
         
-        grid-template-columns: fit-content(100%) 85%;
+        width: 100%;
+
+        grid-template-columns: 5% 85%;
         grid-template-rows: auto auto;
 
         grid-template-areas: 

@@ -8,8 +8,8 @@ import { useMediaQuery } from 'react-responsive';
 export const SidebarMobile: React.FC<any> = ({ isActive, focusPage, setFocusPage, ...props }) => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // Treat as tablet only on portrait to avoid classifying phone landscape as tablet
-    const isTablet = useMediaQuery({ query: '(min-width: 768px) and (max-width: 1023px) and (orientation: portrait)' });
+    // Tablet range in both orientations
+    const isTablet = useMediaQuery({ query: '(min-width: 768px) and (max-width: 1023px)' });
 
     return (
         <>
@@ -30,12 +30,12 @@ export const SidebarMobile: React.FC<any> = ({ isActive, focusPage, setFocusPage
                 position="top-left"
                 backgroundColor="var(--sidebar-bg)"
                 className="h-screen "
-                maxWidth={isTablet ? '40%' : '60%'}
+                maxWidth={isTablet ? '48%' : '60%'}
                 minHeight='100%'
                 showHeader={false}
                 animationType="slideRight"
                 exitAnimationType="slideOutLeft"
-                borderRadius={ isTablet ? { topLeft: '0', topRight: '30px', bottomRight: '30px', bottomLeft: '0' } : { topLeft: '0', topRight: '20px', bottomRight: '20px', bottomLeft: '0' }}
+                borderRadius={ isTablet ? { topLeft: '0', topRight: '24px', bottomRight: '24px', bottomLeft: '0' } : { topLeft: '0', topRight: '20px', bottomRight: '20px', bottomLeft: '0' }}
                 margin="0px"
                 >
                 <ol className='flex flex-col'>

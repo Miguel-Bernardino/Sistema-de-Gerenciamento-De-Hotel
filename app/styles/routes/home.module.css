@@ -6,8 +6,69 @@
 
 .content {
 
+    display: flex;
+    flex-direction: column;
+
     width: fit-content(100%);
 
     grid-area: main;
 
+}
+
+.scrollContainer {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 1rem;
+    padding-bottom: 1rem; /* avoid bottom clipping of last row/shadows */
+    padding-top: 1rem; /* avoid top clipping of first row/shadows */
+    scrollbar-gutter: stable;
+    list-style: none;
+    padding-left: 1rem; /* give space to avoid visual cut on left */
+    margin: 0;
+}
+
+/* Custom scrollbar styling */
+.scrollContainer::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Phones - 1 column */
+@media (max-width: 767px) {
+    .scrollContainer {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 0.75rem;
+        padding: 0.5rem;
+    }
+}
+
+/* Tablets - 2 columns */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .scrollContainer {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.875rem;
+    }
+}
+
+/* Small laptops - 3 columns */
+@media (min-width: 1024px) and (max-width: 1439px) {
+    .scrollContainer {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.scrollContainer::-webkit-scrollbar-track {
+    background: var(--sidebar-scrollbar-track);
+    border-radius: 5px;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb {
+    background: var(--sidebar-scrollbar-thumb);
+    border-radius: 5px;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb:hover {
+    background: var(--sidebar-item-hover-focus);
 }

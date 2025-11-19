@@ -23,7 +23,7 @@ export const SidebarDesktop: React.FC<any> = ( { isActive, focusPage, setFocusPa
             </header>
 
             <main className="w-full">
-                <ol>
+                <ol className={style.list}>
                     <main className="">
                         {/*------------------HOME PAGE------------------------*/}
                         <li className={`${style["sidebar-li"]} ${isActive('/home') ? style["sidebar-li-active"] : ''}`}>    
@@ -81,7 +81,7 @@ export const SidebarDesktop: React.FC<any> = ( { isActive, focusPage, setFocusPa
 
             {/*--------------------------FINAL BARS IN PAGE------------------------*/}
             <footer className="w-full mt-auto">
-                <ol>
+                <ol className={style.list}>
                     {/*--------------------------CONFIG PAGE------------------------*/}
                     <li className={`${style["sidebar-li"]} ${isActive('/config') ? style["sidebar-li-active"] : ''}`}>                        
                         {isActive('/config') && <HighlightIndicator inline={isHovered} />}
