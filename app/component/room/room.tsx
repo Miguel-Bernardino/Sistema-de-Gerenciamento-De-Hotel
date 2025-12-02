@@ -6,12 +6,16 @@ import styles from './room.module.css';
 import * as enums from "../roomStatusbar/roomStatusEnums";
 import { shouldShowCheckin, shouldShowCheckout, shouldShowResponsible, shouldShowDates } from "./roomUtils";
 import { CheckinModal, type CheckinData } from "./CheckinModal/CheckinModal";
+import { CheckoutModal } from "./CheckoutModal/CheckoutModal";
+import { useRooms } from '~/contexts/RoomsContext';
 
 export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, responsible, type }) => {
 
     console.log(enums.RoomStatusMeta[status].color);
 
+    const { refreshRooms } = useRooms();
     const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
+    const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [roomData, setRoomData] = useState({
         status,
         responsible,
@@ -26,6 +30,10 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
 
     const handleCheckinClick = () => {
         setIsCheckinModalOpen(true);
+    };
+
+    const handleCheckoutClick = () => {
+        setIsCheckoutModalOpen(true);
     };
 
     const handleCheckinComplete = (data: CheckinData) => {
@@ -43,7 +51,24 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
             finalStatus: statusToSet,
             calculatedStayType: data.stayType === 'daily' ? 'Diária (12h)' : 'Pernoite (24h)'
         });
-        // TODO: lógica adicional (ex: notificar componente pai / persistir em backend)
+        
+        // Refresh automático após check-in
+        refreshRooms();
+    };
+
+    const handleCheckoutComplete = () => {
+        // Atualiza o estado do quarto para CLEANING após check-out
+        setRoomData({
+            status: enums.RoomStatusType.CLEANING,
+            responsible: '',
+            startDate: '',
+            endDate: ''
+        });
+
+        console.log('Check-out concluído para quarto', id, '- Status alterado para LIMPEZA');
+        
+        // Refresh automático após checkout
+        refreshRooms();
     };
 
     return (
@@ -97,7 +122,11 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                         )}
 
                         {showCheckout && (
-                            <button className={`${styles.actionButton} ${styles.checkout}`} title="Check-out">
+                            <button 
+                                className={`${styles.actionButton} ${styles.checkout}`} 
+                                title="Check-out"
+                                onClick={handleCheckoutClick}
+                            >
                                 <LogOut className={styles.icon} />
                                 <span className={styles.buttonText}>Check-out</span>
                             </button>
@@ -128,6 +157,18 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                 roomId={id}
                 roomType={type}
                 onCheckinComplete={handleCheckinComplete}
+            />
+
+            {/* Modal de Check-out */}
+            <CheckoutModal
+                isOpen={isCheckoutModalOpen}
+                onClose={() => setIsCheckoutModalOpen(false)}
+                roomId={id}
+                roomType={type}
+                responsible={roomData.responsible || 'N/A'}
+                startDate={roomData.startDate?.toString() || ''}
+                endDate={roomData.endDate?.toString() || ''}
+                onCheckoutComplete={handleCheckoutComplete}
             />
         </>
     );

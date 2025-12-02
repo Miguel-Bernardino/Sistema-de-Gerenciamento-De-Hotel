@@ -1,13 +1,65 @@
 import styles from "./topbar.module.css"
+import { useRooms } from '~/contexts/RoomsContext';
+import { useState, useRef, useEffect } from "react";
+import { CreateRoomModal } from './CreateRoomModal/CreateRoomModal';
 
 export const Topbar : React.FC<any> = ({...props}) => {
+    const { refreshRooms } = useRooms();
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleRefresh = async () => {
+        await refreshRooms();
+    };
+
+    const handleMouseEnter = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        setShowDropdown(true);
+    };
+
+    const handleMouseLeave = () => {
+        timeoutRef.current = setTimeout(() => {
+            setShowDropdown(false);
+        }, 200);
+    };
+
+    const handleCreateRoom = () => {
+        setShowDropdown(false);
+        setIsCreateRoomModalOpen(true);
+    };
+
+    const handleCloseCreateRoomModal = () => {
+        setIsCreateRoomModalOpen(false);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
     return (
         <div className={styles.topbarContainer}>
             <ol className="w-full h-full flex justify-center items-center gap-10">
-                {/*----------------Add Checkin Button----------------*/}
-                <li className={`flex justify-center items-center`}>
-                    <button className={styles.topbarButton}>
-                        <svg className={styles.svg} width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
+                {/*----------------Add Checkin Button with Dropdown----------------*/}
+                <li className={`flex justify-center items-center relative`}>
+                    <div 
+                        className={styles.dropdownContainer}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                        ref={dropdownRef}
+                    >
+                        <button 
+                            className={styles.topbarButton}
+                            title="Adicionar Check-in"
+                        >
+                            <svg className={styles.svg} width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                             <rect width="35" height="35" fill="url(#pattern0_31_25)"/>
                             <defs>
                                 <pattern id="pattern0_31_25" patternContentUnits="objectBoundingBox" width="1" height="1">
@@ -16,11 +68,33 @@ export const Topbar : React.FC<any> = ({...props}) => {
                                 <image id="image0_31_25" width="100" height="100" preserveAspectRatio="none" xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAACqElEQVR4nO2dS24UMRRFraBmA9it+GUHwc6k98FHIbAkPmIVfHcEIQT2gGCcRg5h8iZIVHVfu3KO9Ob2Oe2q6pFDAAAAAAAAGIHj47vR7j9LVj6kXM6jlV/J6vY2T2wOcjlvTqKVp83RXlqkw5PTaPWbWkDqfGKul+tcHu8wxdmdlOtr9UbTYBNzeRVCOJg9BzHq/0ex8nLeGIcnp+pfWhp81rk8mu8FnuulekNp8IlWvs/yov/zNaXfUFrCHNWzyUFSLh/lG7HFzLs5glx0sJHtIiaX88lBotWf8o3YMqa5nH5COthIWtAQxPQRCGJ68QQxvWyCmF4wQUwvlSCmF0kQ08sjiE1/Jo+23sX9MQyDr5cgRhBOiHFCtuqTwCPrBrVwgjjUwgniUAsniEMtnCAOtXCCONTCCeJQCyeIQy2cIA61cII41MIJ4lALJ4hDLZwgDrVwgjjUwgniUAsniEMtnCAOtfBhgoTBSb146GYhYrrx0M1CxHTjoZuFiOnGw1wL2dWEwddLECMIJ8Q4IVv1SeCRdYNaOEEcauEEcaiFE8ShFk4Qh1o4QRxq4QRxqIUTxKEWThCHWjhBHGrhBHGohRPEoRZOEIdaOEEcauEEcaiFE8ShFk4Qh1o4QRxq4bc+SOpAMkFML5YgppdJENMLJIjppRGkA1GJIHo5iSB6IWn0IFzoUucM8mNykJTLF/WvKi1nPk8PYuV9BxvZLmGi1TeTg7SLdtUbSUuZo/pkcpCw2axirl/lm7Gxp13oPNsN0u3WY/WG0thzdc/qgzAn7dbjDja2HXGi1edhBxy0W4/Vm0tjzVW0+mIn13f/pd16zDul/jtGLhfrXB+GvbDZrNpFu+1u1/ZtzZ/Hen2LZ7L6KVp9e/01tdms9hMDAAAAAAAgTOI3b0P+YAToXFsAAAAASUVORK5CYII="/>
                             </defs>
                         </svg>
-                    </button>
+                        </button>
+                        
+                        {showDropdown && (
+                            <div className={styles.dropdownMenu}>
+                                <button 
+                                    className={styles.dropdownItem}
+                                    onClick={handleCreateRoom}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 3H4C3.44772 3 3 3.44772 3 4V9C3 9.55228 3.44772 10 4 10H9C9.55228 10 10 9.55228 10 9V4C10 3.44772 9.55228 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M20 3H15C14.4477 3 14 3.44772 14 4V9C14 9.55228 14.4477 10 15 10H20C20.5523 10 21 9.55228 21 9V4C21 3.44772 20.5523 3 20 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M9 14H4C3.44772 14 3 14.4477 3 15V20C3 20.5523 3.44772 21 4 21H9C9.55228 21 10 20.5523 10 20V15C10 14.4477 9.55228 14 9 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M20 14H15C14.4477 14 14 14.4477 14 15V20C14 20.5523 14.4477 21 15 21H20C20.5523 21 21 20.5523 21 20V15C21 14.4477 20.5523 14 20 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    <span>Criar Novo Quarto</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </li>
                 {/*----------------Update Button----------------*/}
                 <li className={`flex justify-center items-center`}>
-                    <button className={styles.topbarButton}>
+                    <button 
+                        className={styles.topbarButton}
+                        onClick={handleRefresh}
+                        title="Atualizar Quartos"
+                    >
                         <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                             <rect width="35" height="35" fill="url(#pattern0_31_27)"/>
                             <defs>
@@ -63,6 +137,12 @@ export const Topbar : React.FC<any> = ({...props}) => {
                     </button>
                 </li>
             </ol>
+
+            {/* Modal de Criar Quarto */}
+            <CreateRoomModal 
+                isOpen={isCreateRoomModalOpen}
+                onClose={handleCloseCreateRoomModal}
+            />
         </div>
     );
 }
