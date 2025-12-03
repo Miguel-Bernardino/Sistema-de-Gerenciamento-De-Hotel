@@ -72,7 +72,20 @@
 .sidebar-li-active svg {
     color: var(--sidebar-item-hover-focus);
     stroke: var(--sidebar-item-hover-focus);
+    
 }
+
+.sidebar-li-active-product {
+    background-color: var(--sidebar-bg-hover);
+    color: var(--sidebar-item-hover-focus);
+}
+
+.sidebar-li-active-finance {
+    background-color: var(--sidebar-bg-hover);
+    fill: var(--sidebar-item-hover-focus);
+}
+
+
 
 .sidebarRootExpanded {
     /* marker class for expanded sidebar */
