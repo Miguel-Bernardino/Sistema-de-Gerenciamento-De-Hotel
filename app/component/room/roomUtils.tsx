@@ -8,9 +8,7 @@ import { RoomStatusType } from "../roomStatusbar/roomStatusEnums";
 export const shouldShowCheckin = (status: RoomStatusType): boolean => {
     return [
         RoomStatusType.AVAILABLE,
-        RoomStatusType.RESERVED,
-        RoomStatusType.CLEANING,
-        RoomStatusType.MAINTENANCE
+        RoomStatusType.RESERVED
     ].includes(status);
 };
 

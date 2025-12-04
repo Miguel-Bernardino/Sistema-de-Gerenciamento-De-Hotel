@@ -40,20 +40,48 @@ export const RoomsProvider: React.FC<RoomsProviderProps> = ({
     const [rooms, setRooms] = useState<RoomData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [isMswReady, setIsMswReady] = useState<boolean>(false);
+
+    // Aguarda MSW estar pronto (apenas no cliente)
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            // No servidor, não usa MSW
+            setIsMswReady(true);
+            return;
+        }
+
+        // No cliente, aguarda MSW estar pronto
+        const checkMswReady = () => {
+            if (import.meta.env.DEV) {
+                // Aguarda um pouco para garantir que MSW iniciou
+                setTimeout(() => setIsMswReady(true), 1000);
+            } else {
+                // Em produção, não usa MSW
+                setIsMswReady(true);
+            }
+        };
+
+        checkMswReady();
+    }, []);
 
     // Função para buscar quartos do backend
     const fetchRooms = useCallback(async () => {
+        // Só faz fetch no cliente e quando MSW estiver pronto
+        if (typeof window === 'undefined' || !isMswReady) {
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
         try {
-            // TODO: Substituir por chamada real ao backend
-            const response = await mockFetchRooms();
+            const response = await fetch('/api/rooms');
+            const data = await response.json();
             
-            if (response.success && response.data) {
-                setRooms(response.data);
+            if (data.success && data.rooms) {
+                setRooms(data.rooms);
             } else {
-                setError(response.message || 'Erro ao carregar quartos');
+                setError(data.message || 'Erro ao carregar quartos');
             }
         } catch (err) {
             console.error('Erro ao buscar quartos:', err);
@@ -61,7 +89,7 @@ export const RoomsProvider: React.FC<RoomsProviderProps> = ({
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [isMswReady]);
 
     // Refresh manual (pode ser chamado por componentes filhos)
     const refreshRooms = useCallback(async () => {
@@ -70,6 +98,11 @@ export const RoomsProvider: React.FC<RoomsProviderProps> = ({
 
     // Polling automático
     useEffect(() => {
+        // Só inicia polling quando MSW estiver pronto
+        if (!isMswReady) {
+            return;
+        }
+
         // Busca inicial
         fetchRooms();
 
@@ -82,7 +115,7 @@ export const RoomsProvider: React.FC<RoomsProviderProps> = ({
         return () => {
             clearInterval(intervalId);
         };
-    }, [fetchRooms, pollingInterval]);
+    }, [fetchRooms, pollingInterval, isMswReady]);
 
     const value: RoomsContextType = {
         rooms,
@@ -97,29 +130,3 @@ export const RoomsProvider: React.FC<RoomsProviderProps> = ({
         </RoomsContext.Provider>
     );
 };
-
-// Mock da chamada ao backend
-// TODO: Substituir por chamada real usando fetch/axios
-async function mockFetchRooms(): Promise<{
-    success: boolean;
-    data?: RoomData[];
-    message?: string;
-}> {
-    // Simula delay de rede
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Simula resposta do backend
-    const mockRooms: RoomData[] = [
-        { id: "101", status: RoomStatusType.AVAILABLE, type: "Standard", responsible: "Miguel Bernardino", startDate: "2025-11-18", endDate: "2025-11-20" },
-        { id: "102", status: RoomStatusType.OCCUPIED, type: "Deluxe", responsible: "Maria Silva", startDate: "2025-11-19", endDate: "2025-11-21" },
-        { id: "103", status: RoomStatusType.EXPIRED, type: "Suite", responsible: "Carlos Souza", startDate: "2025-11-18", endDate: "2025-11-22" },
-        { id: "104", status: RoomStatusType.CLEANING, type: "Standard", responsible: "Ana Costa", startDate: "2025-11-17", endDate: "2025-11-19" },
-        { id: "105", status: RoomStatusType.MAINTENANCE, type: "Deluxe", responsible: "Rafael Lima", startDate: "2025-11-20", endDate: "2025-11-23" },
-        { id: "106", status: RoomStatusType.RESERVED, type: "Suite", responsible: "Lia Fernandes", startDate: "2025-11-16", endDate: "2025-11-18" },
-    ];
-
-    return {
-        success: true,
-        data: mockRooms
-    };
-}

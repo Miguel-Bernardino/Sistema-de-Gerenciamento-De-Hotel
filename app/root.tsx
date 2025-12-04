@@ -44,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <RoomsProvider pollingInterval={30000}>
+    <RoomsProvider pollingInterval={300000}>
       <Outlet />
     </RoomsProvider>
   );

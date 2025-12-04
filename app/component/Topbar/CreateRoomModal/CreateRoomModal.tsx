@@ -47,10 +47,19 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         setIsSubmitting(true);
 
         try {
-            // TODO: Substituir por chamada real ao backend
-            const response = await mockCreateRoom(data);
+            const response = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: data.roomNumber,
+                    type: data.roomType,
+                    pricePerNight: data.overnightRate
+                })
+            });
 
-            if (response.success) {
+            const result = await response.json();
+
+            if (result.success) {
                 // Refresh lista de quartos
                 await refreshRooms();
                 
@@ -58,7 +67,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 reset();
                 onClose();
             } else {
-                alert(response.message || 'Erro ao criar quarto');
+                alert(result.message || 'Erro ao criar quarto');
             }
         } catch (error) {
             console.error('Erro ao criar quarto:', error);
@@ -278,15 +287,3 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         </Modal>
     );
 };
-
-// Mock da criação de quarto no backend
-// TODO: Substituir por chamada real
-async function mockCreateRoom(data: CreateRoomFormData): Promise<{
-    success: boolean;
-    message?: string;
-}> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log('Mock API - Criando quarto:', data);
-    return { success: true };
-}

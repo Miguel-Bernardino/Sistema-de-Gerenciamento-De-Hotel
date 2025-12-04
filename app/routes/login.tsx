@@ -22,12 +22,22 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      const ok = await mockLogin(data.email, data.password);
-      if (!ok) {
-        setError("Credenciais inválidas. Verifique e tente novamente.");
-      } else {
-        // Redireciona para a home ao autenticar com sucesso
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Opcional: armazenar token
+        if (result.token) {
+          localStorage.setItem('authToken', result.token);
+        }
         navigate('/home');
+      } else {
+        setError(result.message || "Credenciais inválidas. Verifique e tente novamente.");
       }
     } catch (e) {
       setError("Erro ao conectar com servidor.");
@@ -72,11 +82,11 @@ export default function Login() {
         }}>
           <div style={{ marginBottom: 8, fontWeight: 600 }}>Exemplo de login (mock):</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <code style={{ background: "#FFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px" }}>email: demo@hotel.com</code>
-            <code style={{ background: "#FFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px" }}>senha: 123456</code>
+            <code style={{ background: "#FFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px" }}>email: admin@hotel.com</code>
+            <code style={{ background: "#FFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px" }}>senha: admin123</code>
             <button
               type="button"
-              onClick={() => { setValue("email", "demo@hotel.com"); setValue("password", "123456"); }}
+              onClick={() => { setValue("email", "admin@hotel.com"); setValue("password", "admin123"); }}
               style={{
                 padding: "6px 10px",
                 borderRadius: 6,
@@ -168,10 +178,4 @@ export default function Login() {
       </div>
     </div>
   );
-}
-
-async function mockLogin(email: string, password: string): Promise<boolean> {
-  await new Promise(r => setTimeout(r, 800));
-  // Mock simples: aceita qualquer e-mail com senha "123456"
-  return password === "123456";
 }
