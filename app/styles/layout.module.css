@@ -6,12 +6,23 @@
     display: grid;
 
     grid-template-columns: fit-content(100%) auto;
-    grid-template-rows: 95px auto;
+    grid-template-rows: 95px 1fr;
 
     grid-template-areas: 
         "nav topbar"
         "nav main"
     ;
+
+    /* Prevent children from forcing overflow */
+    min-height: 0;
+}
+/* Ensure main area centers its content when sidebar is hidden (e.g., login index) */
+.mainArea {
+    grid-area: main;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .navbar {
@@ -20,6 +31,13 @@
     
     justify-content: center;
 
+    /* Allow proper sizing within grid */
+    min-height: 0;
+
+/* Any direct child of the grid should not force overflow */
+.maindiv > * {
+    min-height: 0;
+}
 }
 
 @media (max-width: 1023px) {
@@ -47,4 +65,16 @@
         grid-template-columns: 10% 75%;
 
     }
+}
+
+/* Simplified layout for login: remove topbar/nav tracks and center main */
+.maindivLogin {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 1fr;
+    grid-template-areas:
+        "main";
+    min-height: 0;
 }

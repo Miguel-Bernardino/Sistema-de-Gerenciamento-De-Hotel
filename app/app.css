@@ -67,7 +67,13 @@ html,
 body {
   background-color: var(--cor-principal);
   font-family: var(--font-sans);
+  height: 100%;
 
+
+/* Ensure root app container also stretches full height */
+#root, #app {
+  height: 100%;
+}
 }
 
 /* Utility to remove list markers and reset list spacing when applied */
