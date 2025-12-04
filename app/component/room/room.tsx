@@ -16,17 +16,11 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
     const { refreshRooms } = useRooms();
     const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-    const [roomData, setRoomData] = useState({
-        status,
-        responsible,
-        startDate,
-        endDate
-    });
 
-    const showCheckin = shouldShowCheckin(roomData.status);
-    const showCheckout = shouldShowCheckout(roomData.status);
-    const showResponsible = shouldShowResponsible(roomData.status);
-    const showDates = shouldShowDates(roomData.status);
+    const showCheckin = shouldShowCheckin(status);
+    const showCheckout = shouldShowCheckout(status);
+    const showResponsible = shouldShowResponsible(status);
+    const showDates = shouldShowDates(status);
 
     const handleCheckinClick = () => {
         setIsCheckinModalOpen(true);
@@ -36,46 +30,60 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
         setIsCheckoutModalOpen(true);
     };
 
-    const handleCheckinComplete = (data: CheckinData) => {
-        // Se a data/hora de entrada é futura, tratar como RESERVA; caso contrário, OCUPADO
-        const statusToSet = data.isReservation ? enums.RoomStatusType.RESERVED : enums.RoomStatusType.OCCUPIED;
-        setRoomData({
-            status: statusToSet,
-            responsible: data.responsible,
-            startDate: `${data.startDate} ${data.startTime}`,
-            endDate: `${data.endDate} ${data.endTime}`
-        });
-
-        console.log('Check-in/Reserva concluído para quarto', id, {
-            ...data,
-            finalStatus: statusToSet,
-            calculatedStayType: data.stayType === 'daily' ? 'Diária (12h)' : 'Pernoite (24h)'
-        });
-        
-        // Refresh automático após check-in
-        refreshRooms();
+    const handleCheckinComplete = async (data: CheckinData) => {
+        try {
+            const response = await fetch('/api/checkin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomId: id,
+                    responsible: data.responsible,
+                    startDate: `${data.startDate} ${data.startTime}`,
+                    endDate: `${data.endDate} ${data.endTime}`
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('Check-in concluído para quarto', id);
+                // Refresh automático após check-in
+                await refreshRooms();
+            } else {
+                console.error('Erro no check-in:', result.message);
+            }
+        } catch (error) {
+            console.error('Erro ao fazer check-in:', error);
+        }
     };
 
-    const handleCheckoutComplete = () => {
-        // Atualiza o estado do quarto para CLEANING após check-out
-        setRoomData({
-            status: enums.RoomStatusType.CLEANING,
-            responsible: '',
-            startDate: '',
-            endDate: ''
-        });
-
-        console.log('Check-out concluído para quarto', id, '- Status alterado para LIMPEZA');
-        
-        // Refresh automático após checkout
-        refreshRooms();
+    const handleCheckoutComplete = async () => {
+        try {
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId: id })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('Check-out concluído para quarto', id, '- Status alterado para LIMPEZA');
+                // Refresh automático após checkout
+                await refreshRooms();
+            } else {
+                console.error('Erro no checkout:', result.message);
+            }
+        } catch (error) {
+            console.error('Erro ao fazer checkout:', error);
+        }
     };
 
     return (
         <>
             <li className={styles.element}> 
                 <header className={`${styles.header}`}
-                style={{backgroundColor: `${enums.RoomStatusMeta[roomData.status].color}`}}
+                style={{backgroundColor: `${enums.RoomStatusMeta[status].color}`}}
                 >
                     <h1>{id}</h1>  
                 </header>
@@ -91,7 +99,7 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                         {showResponsible && (
                             <li className="flex items-center gap-2">
                                 <UserRound className={styles.icon} />
-                                <span className={styles.infoText}>{roomData.responsible}</span>
+                                <span className={styles.infoText}>{responsible}</span>
                             </li>
                         )}
 
@@ -100,8 +108,8 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                             <li className="flex items-center gap-2">
                                 <CalendarClock className={styles.icon} />
                                 <div className={`flex flex-col text-xs md:text-sm`}>
-                                    <span className={styles.infoText}>{roomData.startDate.toString()}</span>
-                                    <span className={styles.infoText}>{roomData.endDate.toString()}</span>
+                                    <span className={styles.infoText}>{startDate?.toString()}</span>
+                                    <span className={styles.infoText}>{endDate?.toString()}</span>
                                 </div>
                             </li>
                         )}
@@ -165,9 +173,9 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                 onClose={() => setIsCheckoutModalOpen(false)}
                 roomId={id}
                 roomType={type}
-                responsible={roomData.responsible || 'N/A'}
-                startDate={roomData.startDate?.toString() || ''}
-                endDate={roomData.endDate?.toString() || ''}
+                responsible={responsible || 'N/A'}
+                startDate={startDate?.toString() || ''}
+                endDate={endDate?.toString() || ''}
                 onCheckoutComplete={handleCheckoutComplete}
             />
         </>
