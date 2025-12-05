@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import styles from './CreateRoomModal.module.css';
 import { RoomStatusType } from '~/component/roomStatusbar/roomStatusEnums';
 import { useRooms } from '~/contexts/RoomsContext';
+import { apiCall } from '~/utils/api';
 
 interface CreateRoomModalProps {
     isOpen: boolean;
@@ -35,7 +36,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     } = useForm<CreateRoomFormData>({
         defaultValues: {
             roomNumber: '',
-            roomType: 'Standard',
+            roomType: 'STANDARD',
             floor: '',
             capacity: 1,
             dailyRate: 0,
@@ -47,31 +48,44 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         setIsSubmitting(true);
 
         try {
-            const response = await fetch('/api/rooms', {
+            const payload = {
+                number: data.roomNumber,
+                roomType: data.roomType.toUpperCase(),
+                floor: parseInt(data.floor),
+                capacity: parseInt(String(data.capacity)),
+                dailyRate: parseFloat(String(data.dailyRate)),
+                nightRate: parseFloat(String(data.overnightRate))
+            };
+            
+            console.log('🏨 Criando quarto com payload:', payload);
+            
+            const response = await apiCall('/rooms', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: data.roomNumber,
-                    type: data.roomType,
-                    pricePerNight: data.overnightRate
-                })
+                body: JSON.stringify(payload)
             });
 
-            const result = await response.json();
-
-            if (result.success) {
-                // Refresh lista de quartos
-                await refreshRooms();
-                
-                // Reset e fecha modal
-                reset();
-                onClose();
-            } else {
-                alert(result.message || 'Erro ao criar quarto');
+            console.log('📡 Resposta status:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('❌ Erro do backend:', errorData);
+                alert(errorData.message || `Erro ${response.status}: Verifique os dados`);
+                setIsSubmitting(false);
+                return;
             }
-        } catch (error) {
-            console.error('Erro ao criar quarto:', error);
-            alert('Erro ao conectar com o servidor');
+            
+            const result = await response.json();
+            console.log('✅ Quarto criado:', result);
+
+            // Refresh lista de quartos
+            await refreshRooms();
+            
+            // Reset e fecha modal
+            reset();
+            onClose();
+        } catch (error: any) {
+            console.error('❌ Erro ao criar quarto:', error);
+            alert(error.message || 'Erro ao conectar com o servidor');
         } finally {
             setIsSubmitting(false);
         }
@@ -157,10 +171,10 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                                 required: 'Tipo de quarto é obrigatório'
                             })}
                         >
-                            <option value="Standard">Standard</option>
-                            <option value="Deluxe">Deluxe</option>
-                            <option value="Suite">Suite</option>
-                            <option value="Premium">Premium</option>
+                            <option value="STANDARD">Standard</option>
+                            <option value="DELUXE">Deluxe</option>
+                            <option value="SUITE">Suite</option>
+                            <option value="PREMIUM">Premium</option>
                         </select>
                         {errors.roomType && (
                             <span className={styles.errorText}>{errors.roomType.message}</span>

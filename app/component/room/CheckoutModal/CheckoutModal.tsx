@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '~/component/Modal/Modal';
 import { LogOut, Clock, DollarSign, ShoppingCart, Receipt, AlertCircle, Check, X, Loader2 } from 'lucide-react';
+import { apiCall } from '~/utils/api';
 import styles from './CheckoutModal.module.css';
 
 interface CheckoutModalProps {
@@ -35,6 +36,45 @@ export interface CheckoutPreview {
     taxesAndFees: number;
 }
 
+const formatDateTime = (value?: string) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    const parts = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+        if (part.type !== 'literal') acc[part.type] = part.value;
+        return acc;
+    }, {});
+
+    const y = parts.year || '';
+    const m = parts.month || '';
+    const d = parts.day || '';
+    const hh = parts.hour || '00';
+    const mm = parts.minute || '00';
+    return `${y}-${m}-${d} ${hh}:${mm}`;
+};
+
+const computeStayDuration = (checkInTime?: string, checkOutTime?: string) => {
+    if (!checkInTime || !checkOutTime) return '';
+    const start = new Date(checkInTime);
+    const end = new Date(checkOutTime);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
+    const diffMs = end.getTime() - start.getTime();
+    if (diffMs < 0) return '';
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    return `${hours}h ${minutes}min`;
+};
+
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     isOpen,
     onClose,
@@ -58,19 +98,32 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }, [isOpen, roomId]);
 
     const fetchCheckoutPreview = async () => {
+const finalizeCheckout = async (params: { roomId: string | number }): Promise<{ success: boolean; message?: string }> => {
+    const response = await apiCall(`/occupations/${params.roomId}/checkout`, {
+        method: 'POST',
+        body: JSON.stringify({ serviceChargePercentage: 10 })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.message || 'Erro ao finalizar check-out' };
+    }
+
+    return { success: true };
+};
+
         setIsLoadingPreview(true);
         setError(null);
 
         try {
-            // Chama o endpoint do CalculadoraTarifaService
-            const preview = await fetchCalculadoraTarifaService({
-                roomId,
-                roomType,
-                checkInTime: startDate,
-                checkOutTime: endDate
-            });
-
-            setPreviewData(preview);
+            const preview = await fetchCheckoutSummary(roomId);
+            const formatted: CheckoutPreview = {
+                ...preview,
+                checkInTime: formatDateTime(preview.checkInTime),
+                checkOutTime: formatDateTime(preview.checkOutTime),
+                stayDuration: preview.stayDuration || computeStayDuration(preview.checkInTime, preview.checkOutTime)
+            };
+            setPreviewData(formatted);
         } catch (err) {
             console.error('Erro ao buscar prévia de checkout:', err);
             setError('Não foi possível carregar os dados da conta. Tente novamente.');
@@ -80,17 +133,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
 
     const handleConfirmCheckout = async () => {
-        if (!previewData) return;
-
         setIsProcessing(true);
         setError(null);
 
         try {
-            // Chama endpoint de finalização de checkout
-            const response = await finalizeCheckout({
-                roomId,
-                totalAmount: previewData.totalAmount
-            });
+            const response = await finalizeCheckout({ roomId });
 
             if (response.success) {
                 onCheckoutComplete();
@@ -342,84 +389,59 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     );
 };
 
-// Mock do serviço CalculadoraTarifaService (T6.1 e T6.2)
-// TODO: Substituir por chamada real ao backend
-async function fetchCalculadoraTarifaService(params: {
-    roomId: string | number;
-    roomType: string;
-    checkInTime: string;
-    checkOutTime: string;
-}): Promise<CheckoutPreview> {
-    // Simula delay de rede
-    await new Promise(resolve => setTimeout(resolve, 1500));
+const fetchCheckoutSummary = async (roomId: string | number): Promise<CheckoutPreview> => {
+    const response = await apiCall(`/occupations/room/${roomId}`);
 
-    // Mock de produtos consumidos
-    const mockProducts: ConsumedProduct[] = [
-        {
-            id: 1,
-            name: 'Refrigerante 350ml',
-            quantity: 2,
-            unitPrice: 8.5,
-            totalPrice: 17.0
-        },
-        {
-            id: 2,
-            name: 'Sanduíche',
-            quantity: 1,
-            unitPrice: 25.0,
-            totalPrice: 25.0
-        },
-        {
-            id: 3,
-            name: 'Água Mineral',
-            quantity: 3,
-            unitPrice: 5.0,
-            totalPrice: 15.0
-        }
-    ];
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao carregar resumo do checkout');
+    }
 
-    // Calcula duração da estadia
-    const checkIn = new Date(params.checkInTime);
-    const checkOut = new Date(params.checkOutTime);
-    const diffMs = checkOut.getTime() - checkIn.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    const stayDuration = `${diffHours}h ${diffMinutes}min`;
+    const data = await response.json();
+    const occupation = data.data ?? data;
 
-    // Tarifa base do quarto (mock)
-    const roomRate = diffHours >= 24 ? 250.0 : 150.0;
+    const products: ConsumedProduct[] = (occupation?.consumptions || []).map((item: any) => ({
+        id: item.id ?? item._id ?? `${item.productId ?? 'prod'}-${item.createdAt ?? ''}`,
+        name: item.productName ?? item.name ?? 'Produto',
+        quantity: Number(item.quantity ?? 1),
+        unitPrice: Number(item.unitPrice ?? item.price ?? 0),
+        totalPrice: Number(item.totalPrice ?? (Number(item.quantity ?? 1) * Number(item.unitPrice ?? item.price ?? 0)))
+    }));
 
-    // Subtotal de produtos
-    const subtotalProducts = mockProducts.reduce((sum, p) => sum + p.totalPrice, 0);
+    const subtotalProducts = products.reduce((sum, p) => sum + p.totalPrice, 0);
+    const roomRate = Number(occupation?.roomRate ?? occupation?.nightRate ?? occupation?.dailyRate ?? 0);
+    const taxesAndFees = Number(occupation?.serviceTax ?? occupation?.serviceCharge ?? 0);
+    const totalAmount = Number(occupation?.total ?? occupation?.totalAmount ?? occupation?.finalAmount ?? roomRate + subtotalProducts + taxesAndFees);
 
-    // Taxas e serviços (10% do subtotal)
-    const taxesAndFees = (roomRate + subtotalProducts) * 0.1;
+    const checkInTime = occupation?.checkInDate ?? occupation?.startDate ?? occupation?.entryDate ?? '';
+    const checkOutTime = occupation?.expectedCheckOut ?? occupation?.endDate ?? occupation?.checkOutDate ?? occupation?.exitDate ?? '';
 
-    // Total
-    const totalAmount = roomRate + subtotalProducts + taxesAndFees;
+    const stayDuration = occupation?.duration || occupation?.stayDuration || '';
 
     return {
-        roomId: params.roomId,
-        responsible: '',
-        checkInTime: checkIn.toLocaleString('pt-BR'),
-        checkOutTime: checkOut.toLocaleString('pt-BR'),
+        roomId,
+        responsible: occupation?.responsibleName ?? occupation?.responsible ?? 'Responsável',
+        checkInTime,
+        checkOutTime,
         stayDuration,
         roomRate,
-        products: mockProducts,
+        products,
         subtotalProducts,
-        totalAmount,
-        taxesAndFees
+        taxesAndFees,
+        totalAmount
     };
-}
+};
 
-// Mock de finalização de checkout
-// TODO: Substituir por chamada real ao backend
-async function finalizeCheckout(data: {
-    roomId: string | number;
-    totalAmount: number;
-}): Promise<{ success: boolean; message?: string }> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+const finalizeCheckout = async (params: { roomId: string | number }): Promise<{ success: boolean; message?: string }> => {
+    const response = await apiCall(`/occupations/${params.roomId}/checkout`, {
+        method: 'POST',
+        body: JSON.stringify({ serviceChargePercentage: 10 })
+    });
 
-    console.log('Mock API Call - Check-out finalizado:', data);
+    if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.message || 'Erro ao finalizar check-out' };
+    }
+
     return { success: true };
-}
+};

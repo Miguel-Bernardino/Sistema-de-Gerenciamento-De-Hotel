@@ -31,8 +31,11 @@ export default function Home() {
                 <li key={`${room.id}-${idx}`} className="flex justify-center">
                   <Room
                     id={room.id}
+                    number={room.number}
                     status={room.status}
-                    type={room.type}
+                    roomType={room.roomType}
+                    dailyRate={room.dailyRate}
+                    nightRate={room.nightRate}
                     responsible={room.responsible || ''}
                     startDate={room.startDate || ''}
                     endDate={room.endDate || ''}
