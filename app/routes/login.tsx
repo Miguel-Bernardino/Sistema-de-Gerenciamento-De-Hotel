@@ -108,35 +108,6 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* Exemplo de acesso para testes */}
-        <div style={{
-          background: "#F9FAFB",
-          border: "1px solid #E5E7EB",
-          borderRadius: 8,
-          padding: 12,
-          fontSize: 13,
-          color: "#374151"
-        }}>
-          <div style={{ marginBottom: 8, fontWeight: 600 }}>Exemplo de login (mock):</div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <code style={{ background: "#FFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px" }}>email: admin@hotel.com</code>
-            <code style={{ background: "#FFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px" }}>senha: admin123</code>
-            <button
-              type="button"
-              onClick={() => { setValue("email", "admin@hotel.com"); setValue("password", "admin123"); }}
-              style={{
-                padding: "6px 10px",
-                borderRadius: 6,
-                border: "1px solid var(--border-color, #D1D5DB)",
-                background: "#FFFFFF",
-                cursor: "pointer",
-                fontWeight: 600
-              }}
-            >
-              Preencher automaticamente
-            </button>
-          </div>
-        </div>
         <label style={{ fontWeight: 600 }}>E-mail</label>
         <input
           type="email"
