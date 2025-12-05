@@ -93,25 +93,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     // Busca prévia da conta ao abrir o modal
     useEffect(() => {
         if (isOpen) {
+            const n = Number(roomId);
+            if (!Number.isFinite(n)) {
+                console.error('❌ roomId inválido ao abrir modal de checkout:', roomId);
+                setError('ID do quarto inválido para checkout');
+                setIsLoadingPreview(false);
+                return;
+            }
             fetchCheckoutPreview();
         }
     }, [isOpen, roomId]);
 
     const fetchCheckoutPreview = async () => {
-const finalizeCheckout = async (params: { roomId: string | number }): Promise<{ success: boolean; message?: string }> => {
-    const response = await apiCall(`/occupations/${params.roomId}/checkout`, {
-        method: 'POST',
-        body: JSON.stringify({ serviceChargePercentage: 10 })
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        return { success: false, message: errorData.message || 'Erro ao finalizar check-out' };
-    }
-
-    return { success: true };
-};
-
         setIsLoadingPreview(true);
         setError(null);
 
@@ -390,15 +383,68 @@ const finalizeCheckout = async (params: { roomId: string | number }): Promise<{ 
 };
 
 const fetchCheckoutSummary = async (roomId: string | number): Promise<CheckoutPreview> => {
-    const response = await apiCall(`/occupations/room/${roomId}`);
+    const roomIdNum = Number(roomId);
+    if (!Number.isFinite(roomIdNum) || roomIdNum <= 0) {
+        console.error('❌ roomId inválido ao buscar resumo:', roomId);
+        throw new Error('ID do quarto inválido para checkout');
+    }
+    console.log('🔍 Buscando ocupação para quarto:', roomIdNum);
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao carregar resumo do checkout');
+    // Tenta endpoint principal
+    let occupation: any | null = null;
+    let primaryStatus: number | null = null;
+
+    const response = await apiCall(`/occupations/room/${roomIdNum}`);
+    primaryStatus = response.status;
+
+    if (response.ok) {
+        const data = await response.json();
+        occupation = data.data ?? data;
+    } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn('❌ Status ao buscar ocupação:', response.status, 'Erro:', errorData);
     }
 
-    const data = await response.json();
-    const occupation = data.data ?? data;
+    // Fallback se 404 ou nenhum resultado
+    if (!occupation) {
+        console.log(`🟡 Tentando fallback via lista de ocupações: /occupations?roomId=${roomIdNum}`);
+        const fallbackResponse = await apiCall(`/occupations?roomId=${roomIdNum}`);
+
+        if (fallbackResponse.ok) {
+            const payload = await fallbackResponse.json().catch(() => ({}));
+            const root = payload?.data ?? payload;
+            const list = Array.isArray(root)
+                ? root
+                : Array.isArray(root?.items)
+                    ? root.items
+                    : Array.isArray(root?.results)
+                        ? root.results
+                        : [];
+
+            const isActive = (status?: string) => {
+                const s = (status || '').toLowerCase();
+                return ['active', 'ativado', 'ativa', 'occupied', 'ocupado', 'em_andamento', 'in_progress', 'checked_in', 'ongoing', 'open'].includes(s);
+            };
+
+            const hasNoCheckout = (o: any) => {
+                return !o?.checkOutDate && !o?.checkoutDate && !o?.checkOut && !o?.closedAt && !o?.endedAt;
+            };
+
+            const chosen = list.find((o) => isActive(o.status))
+                || list.find(hasNoCheckout)
+                || list[0];
+            occupation = chosen || null;
+        } else {
+            const err = await fallbackResponse.json().catch(() => ({}));
+            console.warn('❌ Fallback também falhou:', fallbackResponse.status, err);
+        }
+    }
+
+    if (!occupation) {
+        throw new Error(`Nenhuma ocupação ativa encontrada para este quarto (status ${primaryStatus})`);
+    }
+
+    console.log('✅ Ocupação carregada:', occupation);
 
     const products: ConsumedProduct[] = (occupation?.consumptions || []).map((item: any) => ({
         id: item.id ?? item._id ?? `${item.productId ?? 'prod'}-${item.createdAt ?? ''}`,
@@ -418,8 +464,17 @@ const fetchCheckoutSummary = async (roomId: string | number): Promise<CheckoutPr
 
     const stayDuration = occupation?.duration || occupation?.stayDuration || '';
 
+    const isActive = (status?: string) => {
+        const s = (status || '').toLowerCase();
+        return ['active', 'ativado', 'ativa', 'occupied', 'ocupado', 'em_andamento', 'in_progress', 'checked_in', 'ongoing', 'open'].includes(s);
+    };
+
+    if (!isActive(occupation.status)) {
+        throw new Error('A ocupação deste quarto não está ativa. Faça um novo check-in antes do checkout.');
+    }
+
     return {
-        roomId,
+        roomId: roomIdNum,
         responsible: occupation?.responsibleName ?? occupation?.responsible ?? 'Responsável',
         checkInTime,
         checkOutTime,
@@ -433,15 +488,99 @@ const fetchCheckoutSummary = async (roomId: string | number): Promise<CheckoutPr
 };
 
 const finalizeCheckout = async (params: { roomId: string | number }): Promise<{ success: boolean; message?: string }> => {
-    const response = await apiCall(`/occupations/${params.roomId}/checkout`, {
-        method: 'POST',
-        body: JSON.stringify({ serviceChargePercentage: 10 })
-    });
+    try {
+        const roomIdNum = Number(params.roomId);
+        if (!Number.isFinite(roomIdNum) || roomIdNum <= 0) {
+            return { success: false, message: 'ID do quarto inválido para checkout' };
+        }
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        return { success: false, message: errorData.message || 'Erro ao finalizar check-out' };
+        // Primeiro, busca a ocupação ativa para obter seu ID
+        let occupation: any | null = null;
+        const occupationResponse = await apiCall(`/occupations/room/${roomIdNum}`);
+
+        const selectFromList = (list: any[]) => {
+            const isActive = (status?: string) => {
+                const s = (status || '').toLowerCase();
+                return ['active', 'ativado', 'ativa', 'occupied', 'ocupado', 'em_andamento', 'in_progress', 'checked_in', 'ongoing', 'open'].includes(s);
+            };
+
+            const hasNoCheckout = (o: any) => {
+                return !o?.checkOutDate && !o?.checkoutDate && !o?.checkOut && !o?.closedAt && !o?.endedAt;
+            };
+
+            const sorted = [...list].sort((a, b) => {
+                const da = new Date(a?.checkInDate || a?.startDate || a?.createdAt || 0).getTime();
+                const db = new Date(b?.checkInDate || b?.startDate || b?.createdAt || 0).getTime();
+                return db - da;
+            });
+
+            return sorted.find((o) => isActive(o.status))
+                || sorted.find(hasNoCheckout)
+                || sorted[0]
+                || null;
+        };
+
+        if (occupationResponse.ok) {
+            const data = await occupationResponse.json().catch(() => ({}));
+            occupation = data.data ?? data;
+        } else {
+            console.warn('❌ Ocupação direta falhou, tentando fallback...');
+            console.log(`🟡 Tentando fallback via lista de ocupações: /occupations?roomId=${roomIdNum}`);
+            const fallbackResponse = await apiCall(`/occupations?roomId=${roomIdNum}`);
+            if (fallbackResponse.ok) {
+                const payload = await fallbackResponse.json().catch(() => ({}));
+                const root = payload?.data ?? payload;
+                const list = Array.isArray(root)
+                    ? root
+                    : Array.isArray(root?.items)
+                        ? root.items
+                        : Array.isArray(root?.results)
+                            ? root.results
+                            : [];
+
+                occupation = selectFromList(list);
+            }
+        }
+
+        if (!occupation) {
+            return { success: false, message: 'Não foi possível encontrar a ocupação ativa' };
+        }
+
+        const isActive = (occ: any) => {
+            const s = String(occ?.status || occ?.state || '').toLowerCase();
+            const flag = occ?.isActive === true || occ?.active === true;
+            return flag || ['active', 'ativado', 'ativa', 'occupied', 'ocupado', 'em_andamento', 'in_progress', 'checked_in', 'ongoing', 'open'].includes(s);
+        };
+
+        console.log('ℹ️ Status da ocupação selecionada (finalize):', occupation.status, 'state:', occupation.state, 'isActive:', occupation.isActive, 'active:', occupation.active);
+
+        if (!isActive(occupation)) {
+            console.warn('⚠️ Ocupação selecionada não está ativa:', occupation);
+            return { success: false, message: 'A ocupação não está ativa. Faça um novo check-in antes do checkout.' };
+        }
+
+        const occupationId = occupation?.id ?? occupation?._id ?? roomIdNum;
+        console.log('🏨 Finalizando checkout para ocupação:', occupationId, 'ocupação:', occupation);
+        
+        // Realiza o checkout
+        const response = await apiCall(`/occupations/${occupationId}/checkout`, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                serviceChargePercentage: 10
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Erro ao finalizar checkout:', errorData);
+            return { success: false, message: errorData.message || 'Erro ao finalizar check-out' };
+        }
+
+        const result = await response.json();
+        console.log('✅ Checkout realizado com sucesso:', result);
+        return { success: true };
+    } catch (error: any) {
+        console.error('❌ Erro na finalização:', error);
+        return { success: false, message: error.message || 'Erro ao conectar com servidor' };
     }
-
-    return { success: true };
 };

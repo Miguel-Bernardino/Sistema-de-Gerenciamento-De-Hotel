@@ -10,4 +10,5 @@ export default [
         route("config", "routes/config.tsx"),
         route("logout", "routes/logout.tsx"),
     ])
+    route("*", "routes/notfound.tsx"),
 ] satisfies RouteConfig;
