@@ -11,7 +11,7 @@
 import { getToken } from './auth';
 
 export const getApiUrl = (): string => {
-  const url = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const url = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://backend-gerenciamento-hotel.vercel.app/api' : 'http://localhost:3000');
   
   // Log inicial (apenas uma vez)
   if (typeof window !== 'undefined') {
