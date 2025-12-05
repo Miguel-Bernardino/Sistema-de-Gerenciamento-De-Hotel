@@ -19,6 +19,7 @@ export interface CheckinData {
     isReservation?: boolean;
     responsible: string;
     cpf: string;
+    phone: string;
     birthDate: string;
     startDate: string;
     startTime: string;
@@ -67,6 +68,7 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
             isReservation: false,
             responsible: '',
             cpf: '',
+            phone: '',
             birthDate: '',
             startDate: currentDate,
             startTime: currentTime,
@@ -375,6 +377,27 @@ export const CheckinModal: React.FC<CheckinModalProps> = ({
                         />
                         {errors.cpf && (
                             <span className={styles.errorText}>{errors.cpf.message}</span>
+                        )}
+                    </div>
+
+                    {/* Telefone */}
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="phone" className={styles.label}>
+                            <CreditCard size={20} className={styles.labelIcon} />
+                            Telefone
+                        </label>
+                        <input
+                            id="phone"
+                            type="tel"
+                            placeholder="(00) 00000-0000"
+                            className={styles.input}
+                            disabled={isSubmitting}
+                            {...register('phone', { 
+                                required: 'Telefone é obrigatório'
+                            })}
+                        />
+                        {errors.phone && (
+                            <span className={styles.errorText}>{errors.phone.message}</span>
                         )}
                     </div>
 

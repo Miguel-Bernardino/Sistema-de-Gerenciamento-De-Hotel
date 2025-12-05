@@ -1,15 +1,15 @@
 import type { RoomStatusType } from '../roomStatusbar/roomStatusEnums';
 
 export default interface IRoom {
-
+    id: number;
+    number: string;
     status: RoomStatusType;
-    id: string | number;
-    startDate: string | Date;
-    endDate: string | Date;
-    responsible: string;
-
-    //Deve ser configurado pelo usuario em configuracoes
-    type: string;
-    
-
+    roomType: string;
+    floor: number;
+    capacity: number;
+    dailyRate: number;
+    nightRate: number;
+    startDate?: string | Date;
+    endDate?: string | Date;
+    responsible?: string;
 }

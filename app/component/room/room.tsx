@@ -8,14 +8,42 @@ import { shouldShowCheckin, shouldShowCheckout, shouldShowResponsible, shouldSho
 import { CheckinModal, type CheckinData } from "./CheckinModal/CheckinModal";
 import { CheckoutModal } from "./CheckoutModal/CheckoutModal";
 import { useRooms } from '~/contexts/RoomsContext';
+import { apiCall } from '~/utils/api';
 
-export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, responsible, type }) => {
+export const Room : React.FC<IRoom> = ({ status, id, number, roomType, dailyRate, nightRate, startDate, endDate, responsible }) => {
 
     console.log(enums.RoomStatusMeta[status].color);
 
     const { refreshRooms } = useRooms();
     const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+
+    const formatDateTime = (value?: string | Date) => {
+        if (!value) return '';
+
+        if (typeof value === 'string') {
+            const clean = value.replace('Z', '').trim();
+            if (clean.includes('T')) {
+                const [datePart, timePartRaw] = clean.split('T');
+                const hhmm = (timePartRaw || '').slice(0, 5);
+                return `${datePart} ${hhmm}`.trim();
+            }
+            // Already "YYYY-MM-DD HH:mm" or similar
+            return clean.length > 16 ? clean.slice(0, 16) : clean;
+        }
+
+        if (value instanceof Date && !isNaN(value.getTime())) {
+            const pad = (n: number) => String(n).padStart(2, '0');
+            const y = value.getFullYear();
+            const m = pad(value.getMonth() + 1);
+            const d = pad(value.getDate());
+            const hh = pad(value.getHours());
+            const mm = pad(value.getMinutes());
+            return `${y}-${m}-${d} ${hh}:${mm}`;
+        }
+
+        return '';
+    };
 
     const showCheckin = shouldShowCheckin(status);
     const showCheckout = shouldShowCheckout(status);
@@ -32,50 +60,122 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
 
     const handleCheckinComplete = async (data: CheckinData) => {
         try {
-            const response = await fetch('/api/checkin', {
+            const requiredMissing: string[] = [];
+            if (!id && id !== 0) requiredMissing.push('roomId');
+            if (!data.responsible?.trim()) requiredMissing.push('responsibleName');
+            if (!data.cpf?.trim()) requiredMissing.push('responsibleCPF');
+            if (!data.phone?.trim()) requiredMissing.push('responsiblePhone');
+            if (!data.birthDate) requiredMissing.push('responsibleBirthDate');
+            if (!data.startDate || !data.startTime) requiredMissing.push('checkInDate');
+            if (!data.endDate || !data.endTime) requiredMissing.push('expectedCheckOut');
+
+            const rateValue = nightRate ?? dailyRate ?? 0;
+            if (!rateValue) requiredMissing.push('roomRate');
+
+            if (requiredMissing.length > 0) {
+                alert(`Campos obrigatórios ausentes: ${requiredMissing.join(', ')}`);
+                return;
+            }
+
+            const payload = {
+                roomId: Number(id),
+                responsibleName: data.responsible,
+                responsibleCPF: data.cpf,
+                responsiblePhone: data.phone || '',
+                responsibleBirthDate: data.birthDate,
+                carPlate: data.licensePlate || '',
+                checkInDate: `${data.startDate}T${data.startTime}:00`,
+                expectedCheckOut: `${data.endDate}T${data.endTime}:00`,
+                roomRate: rateValue,
+                initialConsumption: 0,
+                companions: (data.companions || []).map(c => ({
+                    name: c.name,
+                    cpf: c.cpf,
+                    birthDate: c.birthDate
+                }))
+            };
+            
+            console.log('🏨 Enviando check-in:', payload);
+            
+            const response = await apiCall('/occupations', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    roomId: id,
-                    responsible: data.responsible,
-                    startDate: `${data.startDate} ${data.startTime}`,
-                    endDate: `${data.endDate} ${data.endTime}`
-                })
+                body: JSON.stringify(payload)
             });
             
-            const result = await response.json();
+            console.log('📡 Resposta check-in status:', response.status);
             
-            if (result.success) {
-                console.log('Check-in concluído para quarto', id);
-                // Refresh automático após check-in
-                await refreshRooms();
-            } else {
-                console.error('Erro no check-in:', result.message);
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('❌ Erro no check-in:', errorData);
+                alert(errorData.message || errorData.error || `Erro ${response.status}`);
+                return;
             }
-        } catch (error) {
-            console.error('Erro ao fazer check-in:', error);
+            
+            const result = await response.json();
+            console.log('✅ Check-in bem-sucedido:', result);
+            
+            // Refresh automático após check-in para atualizar status do quarto
+            console.log('🔄 Atualizando lista de quartos...');
+            await refreshRooms();
+            
+            alert('Check-in realizado com sucesso!');
+        } catch (error: any) {
+            console.error('❌ Erro ao fazer check-in:', error);
+            alert(error.message || 'Erro ao conectar com o servidor');
         }
     };
 
     const handleCheckoutComplete = async () => {
         try {
-            const response = await fetch('/api/checkout', {
+            console.log('🏨 Buscando ocupação do quarto:', id);
+            
+            // Primeiro, obter a ocupação ativa do quarto
+            const occupationResponse = await apiCall(`/occupations/room/${id}`);
+            
+            if (!occupationResponse.ok) {
+                const errorData = await occupationResponse.json();
+                console.error('❌ Erro ao buscar ocupação:', errorData);
+                alert(errorData.message || 'Não foi possível encontrar a ocupação');
+                return;
+            }
+            
+            const occupationData = await occupationResponse.json();
+            console.log('✅ Ocupação encontrada:', occupationData);
+            
+            if (!occupationData.data && !occupationData.id) {
+                alert('Não foi possível encontrar a ocupação ativa do quarto');
+                return;
+            }
+            
+            const occupationId = occupationData.data?.id || occupationData.id;
+            console.log('🔑 ID da ocupação:', occupationId);
+            
+            // Depois, fazer o checkout
+            const response = await apiCall(`/occupations/${occupationId}/checkout`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId: id })
+                body: JSON.stringify({ serviceChargePercentage: 10 })
             });
             
-            const result = await response.json();
+            console.log('📡 Resposta checkout status:', response.status);
             
-            if (result.success) {
-                console.log('Check-out concluído para quarto', id, '- Status alterado para LIMPEZA');
-                // Refresh automático após checkout
-                await refreshRooms();
-            } else {
-                console.error('Erro no checkout:', result.message);
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('❌ Erro no checkout:', errorData);
+                alert(errorData.message || `Erro ${response.status}`);
+                return;
             }
-        } catch (error) {
-            console.error('Erro ao fazer checkout:', error);
+            
+            const result = await response.json();
+            console.log('✅ Check-out bem-sucedido:', result);
+            
+            // Refresh automático após checkout para atualizar status do quarto
+            console.log('🔄 Atualizando lista de quartos...');
+            await refreshRooms();
+            
+            alert('Check-out realizado com sucesso!');
+        } catch (error: any) {
+            console.error('❌ Erro ao fazer checkout:', error);
+            alert(error.message || 'Erro ao conectar com o servidor');
         }
     };
 
@@ -85,14 +185,14 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                 <header className={`${styles.header}`}
                 style={{backgroundColor: `${enums.RoomStatusMeta[status].color}`}}
                 >
-                    <h1>{id}</h1>  
+                    <h1>{number}</h1>  
                 </header>
                 <main className={styles.main}>
                     <ul className="flex flex-col gap-2 text-sm md:text-base lg:text-lg">
                         {/* Informações do tipo de Quarto */}
                         <li className="flex items-center gap-2">
                             <BadgeInfo className={styles.icon} />
-                            <span className={styles.infoText}>{type}</span>
+                            <span className={styles.infoText}>{roomType}</span>
                         </li>
 
                         {/* Informações do Responsavel - apenas para quartos ocupados/vencidos/limpeza */}
@@ -108,8 +208,8 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                             <li className="flex items-center gap-2">
                                 <CalendarClock className={styles.icon} />
                                 <div className={`flex flex-col text-xs md:text-sm`}>
-                                    <span className={styles.infoText}>{startDate?.toString()}</span>
-                                    <span className={styles.infoText}>{endDate?.toString()}</span>
+                                    <span className={styles.infoText}>{formatDateTime(startDate)}</span>
+                                    <span className={styles.infoText}>{formatDateTime(endDate)}</span>
                                 </div>
                             </li>
                         )}
@@ -163,7 +263,7 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                 isOpen={isCheckinModalOpen}
                 onClose={() => setIsCheckinModalOpen(false)}
                 roomId={id}
-                roomType={type}
+                roomType={roomType}
                 onCheckinComplete={handleCheckinComplete}
             />
 
@@ -172,10 +272,10 @@ export const Room : React.FC<IRoom> = ({ status, id, startDate, endDate, respons
                 isOpen={isCheckoutModalOpen}
                 onClose={() => setIsCheckoutModalOpen(false)}
                 roomId={id}
-                roomType={type}
+                roomType={roomType}
                 responsible={responsible || 'N/A'}
-                startDate={startDate?.toString() || ''}
-                endDate={endDate?.toString() || ''}
+                startDate={formatDateTime(startDate)}
+                endDate={formatDateTime(endDate)}
                 onCheckoutComplete={handleCheckoutComplete}
             />
         </>

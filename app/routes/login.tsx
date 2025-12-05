@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { saveToken, saveUser } from "~/utils/auth";
 
 interface LoginFormData {
   email: string;
@@ -22,25 +23,61 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/login', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const url = `${apiUrl}/auth/login`;
+      
+      console.log('📡 Enviando login para:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: data.email, password: data.password })
       });
       
-      const result = await response.json();
+      console.log('✅ Resposta do servidor:', response.status, response.statusText);
       
-      if (result.success) {
-        // Opcional: armazenar token
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Erro na resposta:', errorData);
+        setError(errorData.message || `Erro ${response.status}: ${response.statusText}`);
+        return;
+      }
+      
+      const result = await response.json();
+      console.log('🔐 Resultado do login:', result);
+      
+      // Backend retorna: { admin: {...}, token: "..." }
+      if (result.token && result.admin) {
+        // Salvar token
+        saveToken(result.token);
+        console.log('✅ Token salvo:', result.token.substring(0, 20) + '...');
+        
+        // Salvar dados do usuário
+        saveUser({
+          id: result.admin.id,
+          email: result.admin.email,
+          name: result.admin.name
+        });
+        console.log('👤 Dados do usuário salvos:', result.admin.email);
+        
+        navigate('/home');
+      } else if (result.success && result.token) {
+        // Fallback para formato antigo
         if (result.token) {
-          localStorage.setItem('authToken', result.token);
+          saveToken(result.token);
         }
+        
+        if (result.data?.user || result.user) {
+          saveUser(result.data?.user || result.user);
+        }
+        
         navigate('/home');
       } else {
         setError(result.message || "Credenciais inválidas. Verifique e tente novamente.");
       }
-    } catch (e) {
-      setError("Erro ao conectar com servidor.");
+    } catch (e: any) {
+      console.error('❌ Erro ao fazer login:', e);
+      setError(e.message || "Erro ao conectar com servidor.");
     } finally {
       setLoading(false);
     }
