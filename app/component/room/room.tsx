@@ -126,56 +126,12 @@ export const Room : React.FC<IRoom> = ({ status, id, number, roomType, dailyRate
     };
 
     const handleCheckoutComplete = async () => {
+        // Modal já completou o checkout, apenas refresh dos quartos
+        console.log('✅ Check-out bem-sucedido via modal. Atualizando lista de quartos...');
         try {
-            console.log('🏨 Buscando ocupação do quarto:', id);
-            
-            // Primeiro, obter a ocupação ativa do quarto
-            const occupationResponse = await apiCall(`/occupations/room/${id}`);
-            
-            if (!occupationResponse.ok) {
-                const errorData = await occupationResponse.json();
-                console.error('❌ Erro ao buscar ocupação:', errorData);
-                alert(errorData.message || 'Não foi possível encontrar a ocupação');
-                return;
-            }
-            
-            const occupationData = await occupationResponse.json();
-            console.log('✅ Ocupação encontrada:', occupationData);
-            
-            if (!occupationData.data && !occupationData.id) {
-                alert('Não foi possível encontrar a ocupação ativa do quarto');
-                return;
-            }
-            
-            const occupationId = occupationData.data?.id || occupationData.id;
-            console.log('🔑 ID da ocupação:', occupationId);
-            
-            // Depois, fazer o checkout
-            const response = await apiCall(`/occupations/${occupationId}/checkout`, {
-                method: 'POST',
-                body: JSON.stringify({ serviceChargePercentage: 10 })
-            });
-            
-            console.log('📡 Resposta checkout status:', response.status);
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('❌ Erro no checkout:', errorData);
-                alert(errorData.message || `Erro ${response.status}`);
-                return;
-            }
-            
-            const result = await response.json();
-            console.log('✅ Check-out bem-sucedido:', result);
-            
-            // Refresh automático após checkout para atualizar status do quarto
-            console.log('🔄 Atualizando lista de quartos...');
             await refreshRooms();
-            
-            alert('Check-out realizado com sucesso!');
         } catch (error: any) {
-            console.error('❌ Erro ao fazer checkout:', error);
-            alert(error.message || 'Erro ao conectar com o servidor');
+            console.error('❌ Erro ao refresh após checkout:', error);
         }
     };
 

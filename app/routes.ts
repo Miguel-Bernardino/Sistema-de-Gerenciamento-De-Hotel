@@ -9,5 +9,6 @@ export default [
         route("finance", "routes/finance.tsx"),
         route("config", "routes/config.tsx"),
         route("logout", "routes/logout.tsx"),
+        route("*", "routes/notfound.tsx"),
     ])
 ] satisfies RouteConfig;
